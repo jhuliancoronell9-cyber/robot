@@ -1,0 +1,860 @@
+html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 5 | Obstacle Avoidance - JetBot AI</title>
+
+<style>
+:root {
+    --green: #76b900;
+    --green-light: #a5e34b;
+    --black: #080a09;
+    --dark: #101411;
+    --panel: #181e1a;
+    --panel2: #202822;
+    --line: #354238;
+    --white: #f1f5f0;
+    --muted: #aab5ac;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    background:
+        radial-gradient(circle at 10% 10%, #76b90020, transparent 28%),
+        radial-gradient(circle at 90% 90%, #76b90015, transparent 30%),
+        #080a09;
+    color: var(--white);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+/* POSTER */
+
+.poster {
+    max-width: 1550px;
+    margin: auto;
+    padding: 25px;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+
+    background: linear-gradient(145deg, #111713, #090d0a);
+    border: 1px solid #3b493e;
+    border-top: 5px solid var(--green);
+    box-shadow: 0 20px 65px #000a;
+}
+
+/* HEXAGONAL PATTERN */
+
+.poster::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: .10;
+
+    background-image: url("data:image/svg+xml,%3Csvg width='90' height='78' viewBox='0 0 90 78' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M22 1 L44 13 L44 39 L22 51 L0 39 L0 13 Z M67 27 L89 39 L89 65 L67 77 L45 65 L45 39 Z' fill='none' stroke='%2376b900' stroke-width='1'/%3E%3C/svg%3E");
+    background-size: 90px 78px;
+}
+
+/* HEADER */
+
+header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 25px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+}
+
+.eyebrow {
+    color: var(--green-light);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+
+h1 {
+    font-size: clamp(36px, 4.5vw, 65px);
+    line-height: .98;
+    letter-spacing: -2px;
+    margin: 9px 0;
+    text-transform: uppercase;
+}
+
+h1 span {
+    color: var(--green);
+}
+
+.subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    margin: 8px 0;
+    line-height: 1.5;
+}
+
+.logo {
+    width: 125px;
+    height: 85px;
+    object-fit: contain;
+    background: transparent;
+}
+
+.meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 13px;
+}
+
+.pill {
+    padding: 7px 10px;
+    color: #d9edc8;
+    background: #182315;
+    border: 1px solid #455d36;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: .7px;
+}
+
+/* MAIN GRID */
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-flow: dense;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.panel {
+    min-width: 0;
+    padding: 15px;
+    background: linear-gradient(145deg, #1b231d, #111713);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+}
+
+.panel h2 {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 10px;
+    color: var(--green-light);
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.panel h2::before {
+    content: "";
+    width: 5px;
+    height: 17px;
+    background: var(--green);
+    flex-shrink: 0;
+}
+
+p, li {
+    color: #d3dcd4;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+p {
+    margin: 6px 0;
+}
+
+ul {
+    margin: 6px 0;
+    padding-left: 18px;
+}
+
+li {
+    margin-bottom: 4px;
+}
+
+strong {
+    color: white;
+}
+
+.green {
+    color: var(--green-light);
+}
+
+.muted {
+    color: var(--muted);
+}
+
+.wide {
+    grid-column: span 2;
+}
+
+.full {
+    grid-column: span 4;
+}
+
+/* VIDEO */
+
+.video-panel {
+    grid-column: span 1;
+    grid-row: span 2;
+}
+
+.video-wrap {
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    max-height: 410px;
+    margin-top: 10px;
+    overflow: hidden;
+    background: #050705;
+    border: 1px solid #526548;
+    border-radius: 4px;
+}
+
+video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+    background: #050705;
+}
+
+.hint {
+    color: #9eaa9f;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+/* METRICS */
+
+.metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+    margin-top: 12px;
+}
+
+.metric {
+    padding: 12px 5px;
+    text-align: center;
+    background: #0d130e;
+    border: 1px solid #354536;
+}
+
+.metric b {
+    display: block;
+    color: var(--green-light);
+    font-size: 25px;
+}
+
+.metric span {
+    display: block;
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 9px;
+    text-transform: uppercase;
+}
+
+/* METHODOLOGY */
+
+.flow {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 7px;
+    margin-top: 12px;
+}
+
+.step {
+    padding: 10px 5px;
+    text-align: center;
+    background: #202b21;
+    border: 1px solid #40543a;
+    border-radius: 3px;
+}
+
+.step b {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--green-light);
+    font-size: 11px;
+}
+
+.step span {
+    display: block;
+    color: #d1dcd0;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+/* DATASET */
+
+.dataset {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+    margin-top: 12px;
+}
+
+.data-box {
+    padding: 12px 7px;
+    text-align: center;
+    background: #0d130e;
+    border: 1px solid #3d5037;
+}
+
+.data-box b {
+    display: block;
+    color: var(--green-light);
+    font-size: 27px;
+}
+
+.data-box span {
+    color: var(--muted);
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+/* TEAM MEMBERS */
+
+.team {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.person {
+    padding: 12px 5px;
+    text-align: center;
+    color: #e4ece3;
+    font-size: 11px;
+    background: #101611;
+    border: 1px solid #354438;
+    border-radius: 3px;
+}
+
+.person::before {
+    content: "◆";
+    display: block;
+    margin-bottom: 6px;
+    color: var(--green);
+    font-size: 13px;
+}
+
+/* TAGS */
+
+.tag {
+    display: inline-block;
+    margin: 3px 2px 3px 0;
+    padding: 5px 7px;
+    color: #cce6b8;
+    background: #1b2818;
+    border: 1px solid #405637;
+    border-radius: 3px;
+    font-size: 10px;
+}
+
+/* FOOTER */
+
+footer {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+    color: #87958a;
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 1050px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .full {
+        grid-column: span 2;
+    }
+
+    .video-panel {
+        grid-column: span 1;
+        grid-row: span 2;
+    }
+}
+
+@media (max-width: 650px) {
+    body {
+        padding: 7px;
+    }
+
+    .poster {
+        padding: 13px;
+    }
+
+    header {
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+    }
+
+    .logo {
+        width: 85px;
+        height: 70px;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .wide, .full, .video-panel {
+        grid-column: span 1;
+        grid-row: auto;
+    }
+
+    .video-wrap {
+        max-height: 520px;
+        width: min(100%, 290px);
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .team {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .flow {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    footer {
+        line-height: 1.8;
+    }
+}
+
+/* PRINT */
+
+@media print {
+    @page {
+        size: A3 landscape;
+        margin: 7mm;
+    }
+
+    body {
+        padding: 0;
+        background: #080a09;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+
+    .poster {
+        max-width: none;
+        box-shadow: none;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<main class="poster">
+
+<!-- HEADER -->
+
+<header>
+    <div>
+        <div class="eyebrow">
+            Mobile Robotics · Laboratory 05
+        </div>
+
+        <h1>
+            OBSTACLE<br>
+            <span>AVOIDANCE</span>
+        </h1>
+
+        <p class="subtitle">
+            Image classification and autonomous navigation
+            using computer vision with JetBot.
+        </p>
+
+        <div class="meta">
+            <span class="pill">GROUP T01</span>
+            <span class="pill">JETANK AI KIT</span>
+            <span class="pill">COMPUTER VISION</span>
+            <span class="pill">NEURAL NETWORKS</span>
+        </div>
+    </div>
+
+    <img
+        class="logo"
+        src="Logo_Universidad_Simón_Bolívar.png"
+        alt="Universidad Simón Bolívar">
+</header>
+
+
+<section class="grid">
+
+    <!-- 01 PROBLEM -->
+
+    <article class="panel">
+        <h2>01 · Problem</h2>
+
+        <p>
+            Mobile robots need to recognize the conditions
+            of their surroundings in order to move autonomously.
+            An obstacle in their path can prevent forward movement
+            and cause a collision.
+        </p>
+
+        <p>
+            This project aims to enable the <strong>JetBot</strong>
+            to visually identify free and obstructed spaces,
+            allowing it to respond to obstacles through
+            evasive maneuvers.
+        </p>
+    </article>
+
+
+    <!-- 02 OBJECTIVE -->
+
+    <article class="panel">
+        <h2>02 · Objective</h2>
+
+        <p>
+            To develop a navigation system for the JetBot
+            using a neural network trained with images
+            of its surroundings, capable of classifying
+            path conditions and supporting the robot's
+            decision-making process.
+        </p>
+
+        <div style="margin-top:12px">
+            <span class="tag">Classification</span>
+            <span class="tag">Machine Learning</span>
+            <span class="tag">Autonomous Navigation</span>
+        </div>
+    </article>
+
+
+    <!-- 03 VIDEO -->
+
+    <article class="panel video-panel">
+        <h2>03 · Robot in Action</h2>
+
+        <p>
+            Video evidence of the JetBot's navigation tests
+            and obstacle avoidance behavior.
+        </p>
+
+        <div class="video-wrap">
+            <video controls preload="metadata"
+                   playsinline>
+                <source src="jetbot.mp4" type="video/mp4">
+                Your browser cannot play this video.
+            </video>
+        </div>
+
+        <p class="hint">
+            TEST VIDEO · JETANK AI KIT<br>
+            File: jetbot.mp4<br>
+            Vertical format: 720 × 1280 px.
+        </p>
+    </article>
+
+
+    <!-- 04 DATASET -->
+
+    <article class="panel">
+        <h2>04 · Dataset</h2>
+
+        <p>
+            A dataset of <strong>200 images</strong> was created,
+            divided into two categories to train the neural network.
+        </p>
+
+        <div class="dataset">
+            <div class="data-box">
+                <b>100</b>
+                <span>Free Spaces</span>
+            </div>
+
+            <div class="data-box">
+                <b>100</b>
+                <span>Obstructed Spaces</span>
+            </div>
+        </div>
+
+        <p style="margin-top:10px">
+            <strong>Free spaces:</strong> images showing
+            paths without obstacles.
+        </p>
+
+        <p>
+            <strong>Obstructed spaces:</strong> images showing
+            wall edges and chair legs, located at a reported
+            distance of between 5 and 10 mm.
+        </p>
+
+        <div class="tag">50% Free</div>
+        <div class="tag">50% Obstructed</div>
+    </article>
+
+
+    <!-- 05 METHODOLOGY -->
+
+    <article class="panel wide">
+        <h2>05 · Work Methodology</h2>
+
+        <p>
+            The development process was organized into four main stages:
+        </p>
+
+        <div class="flow">
+            <div class="step">
+                <b>01 · DATA COLLECTION</b>
+                <span>
+                    Collection of 200 images
+                    from the environment.
+                </span>
+            </div>
+
+            <div class="step">
+                <b>02 · DATASET</b>
+                <span>
+                    Classification into
+                    free and obstructed spaces.
+                </span>
+            </div>
+
+            <div class="step">
+                <b>03 · TRAINING</b>
+                <span>
+                    Pattern learning
+                    through the neural network.
+                </span>
+            </div>
+
+            <div class="step">
+                <b>04 · NAVIGATION</b>
+                <span>
+                    Detection tests and
+                    obstacle avoidance maneuvers.
+                </span>
+            </div>
+        </div>
+    </article>
+
+
+    <!-- 06 NEURAL NETWORKS -->
+
+    <article class="panel">
+        <h2>06 · Neural Networks</h2>
+
+        <p>
+            An artificial neural network is a mathematical model
+            inspired by the way the human brain works, designed
+            to learn patterns from data.
+        </p>
+
+        <ul>
+            <li>
+                <strong>Input:</strong> receives the image pixels.
+            </li>
+            <li>
+                <strong>Hidden layers:</strong> process
+                features such as edges and shapes.
+            </li>
+            <li>
+                <strong>Output:</strong> generates a prediction
+                about the image class.
+            </li>
+        </ul>
+
+        <p>
+            During training, weights and biases are adjusted
+            to reduce errors through a process known as
+            <strong>backpropagation</strong>.
+        </p>
+    </article>
+
+
+    <!-- 07 RGB BGR -->
+
+    <article class="panel">
+        <h2>07 · RGB and BGR</h2>
+
+        <p>
+            Digital images are made up of pixels
+            represented through three color channels.
+        </p>
+
+        <p>
+            <strong>RGB:</strong> organizes the channels
+            in the order Red, Green, and Blue.
+        </p>
+
+        <p>
+            <strong>BGR:</strong> uses the order Blue, Green,
+            and Red, commonly used in OpenCV.
+        </p>
+
+        <p>
+            Each channel has values ranging from
+            <strong>0 to 255</strong>, representing
+            the intensity of each color.
+        </p>
+
+        <div class="tag">RGB · R G B</div>
+        <div class="tag">BGR · B G R</div>
+    </article>
+
+
+    <!-- 08 OPENCV -->
+
+    <article class="panel">
+        <h2>08 · OpenCV Library</h2>
+
+        <p>
+            OpenCV is a computer vision library
+            that allows images and videos to be processed
+            and analyzed.
+        </p>
+
+        <p>
+            It provides tools for loading images, resizing them,
+            changing color spaces, and processing video frames.
+        </p>
+
+        <p>
+            In robotics, it facilitates the processing
+            of visual information used by the system
+            to interpret its surroundings.
+        </p>
+    </article>
+
+
+    <!-- 09 MARKERS -->
+
+    <article class="panel">
+        <h2>09 · Markers</h2>
+
+        <p>
+            In mobile robotics, markers are visual references
+            that help robots recognize locations,
+            determine their orientation, or perform specific tasks.
+        </p>
+
+        <p>
+            <strong>Natural markers:</strong> elements
+            already present in the environment, such as corners,
+            textures, doors, and floor patterns.
+        </p>
+
+        <p>
+            <strong>Artificial markers:</strong> references
+            intentionally placed in the environment, such as QR codes,
+            visual labels, and geometric patterns.
+        </p>
+    </article>
+
+
+    <!-- 10 RESULTS -->
+
+    <article class="panel wide">
+        <h2>10 · Results and Evaluation</h2>
+
+        <p>
+            Model evaluation makes it possible to analyze
+            its ability to correctly classify free
+            and obstructed spaces.
+        </p>
+
+        <div class="metrics">
+            <div class="metric">
+                <b>200</b>
+                <span>Images Used</span>
+            </div>
+
+            <div class="metric">
+                <b>50/50</b>
+                <span>Dataset Distribution</span>
+            </div>
+
+            <div class="metric">
+                <b>— %</b>
+                <span>Model Accuracy</span>
+            </div>
+        </div>
+
+        <p class="hint" style="margin-top:10px">
+            Complete the accuracy value using the actual result
+            obtained during training. Observations from
+            the navigation tests can also be added.
+        </p>
+    </article>
+
+
+    <!-- 11 CONCLUSION -->
+
+    <article class="panel wide">
+        <h2>11 · Conclusion</h2>
+
+        <p>
+            This project integrates computer vision,
+            machine learning, and mobile robotics into
+            an image-classification-based navigation system.
+            Through a balanced dataset, the JetBot can learn
+            to distinguish between free and obstructed spaces.
+        </p>
+
+        <p>
+            This work demonstrates the importance of neural
+            networks in environmental perception and in
+            developing robots capable of making decisions
+            while navigating their surroundings.
+        </p>
+    </article>
+
+
+    <!-- 12 TEAM MEMBERS -->
+
+    <article class="panel full">
+        <h2>12 · Project Team</h2>
+
+        <div class="team">
+            <div class="person">Jhulian Coronell</div>
+            <div class="person">Nicolle Guzman</div>
+            <div class="person">Franco Martínez</div>
+            <div class="person">Juan Rodriguez</div>
+            <div class="person">Luis Trujillo</div>
+        </div>
+    </article>
+
+</section>
+
+
+<!-- FOOTER -->
+
+<footer>
+    <span>Universidad Simón Bolívar</span>
+    <span>Group T01 · Mobile Robotics</span>
+    <span class="green">Lab 05 · Obstacle Avoidance</span>
+</footer>
+
+</main>
+
+</body>
+</html>
